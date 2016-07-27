@@ -1,0 +1,6 @@
+ReportName,ReportId,ReportCurrency,ReportTotal,ReportDate,LastComment,ApprovalStatus,ReportDetailsURL,ExpenseUserLoginID,ApproverLoginID,EmployeeName,PaymentStatus
+This is a Test,EDDF92EDC22C4FA7B290,USD,220.00000000,2015-11-13T00:00:00,,Not Submitted,https://www.concursolutions.com/api/expense/expensereport/v2.0/report/EDDF92EDC22C4FA7B290,devops@corus360.com,,DevOps Admin,Not Paid
+Testing testing,F4B253F12B15458F9D54,USD,135.00000000,2015-11-19T00:00:00,,Not Submitted,https://www.concursolutions.com/api/expense/expensereport/v2.0/report/F4B253F12B15458F9D54,devops@corus360.com,,DevOps Admin,Not Paid
+Testing0,26094B919BB8499E988D,USD,162.00000000,2015-11-19T00:00:00,,Not Submitted,https://www.concursolutions.com/api/expense/expensereport/v2.0/report/26094B919BB8499E988D,devops@corus360.com,,DevOps Admin,Not Paid
+Testing1,FD789EC488D64B0A9438,USD,63.00000000,2015-11-19T00:00:00,,Not Submitted,https://www.concursolutions.com/api/expense/expensereport/v2.0/report/FD789EC488D64B0A9438,devops@corus360.com,,DevOps Admin,Not Paid
+Testing2,83C041C2F445403A9A36,USD,43.00000000,2015-11-20T00:00:00,Report Comment Test,Not Submitted,https://www.concursolutions.com/api/expense/expensereport/v2.0/report/83C041C2F445403A9A36,devops@corus360.com,,DevOps Admin,Not Paid

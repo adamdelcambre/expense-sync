@@ -60,6 +60,8 @@ class Concur:
             return None
 
     def getReports(self, params):
+        if params is None:
+            params = {}
         headers = {
             'X-ConsumerKey': self.key,
             'Authorization': 'OAuth ' + self.token

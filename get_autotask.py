@@ -2,6 +2,7 @@ from __future__ import print_function
 from suds.client import Client
 from suds.transport.http import HttpAuthenticated
 import xmltodict
+from datetime import datetime, timedelta
 from WebDriver_config import AUTH, SOAP_URL, WSDL_URL, PROXIES
 
 
@@ -47,18 +48,6 @@ class AutoTask:
                 faults=False
             )
 
-            # Check if report exists first
-            # check = self.query(
-            # 'ExpenseReport', 'id', 'equals', params['atid'])
-            # check = self.query(
-            # 'ExpenseReport', 'Name', 'equals', params['name'])
-            # if hasattr(check.EntityResults, 'Entity'):
-            #   print 'on checking if exists'
-            #   return (False, False)
-            # else:
-            #   pass
-
-            # Getting user's autotask id, ending if none is found
             r = self.query('Resource', 'Email', 'equals', self.user)
             if hasattr(r.EntityResults, 'Entity'):
                 userid = r.EntityResults.Entity[0].id
@@ -72,7 +61,6 @@ class AutoTask:
             report = client.factory.create('ExpenseReport')
             report.SubmitterID = userid
             report.Name = params['name']
-
             report.WeekEnding = params['weekending']
             report.id = '0'
             report.Submit = True
@@ -105,7 +93,6 @@ class AutoTask:
         # Building Expenses
         # try:
         for x in params['entries']:
-            print('Building Entry')
             entry = client.factory.create('ExpenseItem')
             entry.ExpenseReportID = repid
             entry.id = 0
@@ -115,7 +102,7 @@ class AutoTask:
             entry.ExpenseCategory = x['expense']
             entry.HaveReceipt = True
             # entry.GLCode = ?
-            entry.AccountID = 29707842
+            # entry.AccountID = 29707842
             if x['expense'] == 2:
                 entry.Miles = x['miles']
                 entry.Destination = x['to']
@@ -135,3 +122,9 @@ class AutoTask:
         # Posting
         xy = client.service.create(entryArray)
         return xy
+
+if __name__ == '__main__':
+    auto = AutoTask("devops@corus360.com")
+    back_date = (datetime.today() - timedelta(days=1)).isoformat()
+    d = back_date.replace(' ', 'T')
+    print(auto.query('ExpenseReport', 'SubmitterId', 'equals', '30708757'))
