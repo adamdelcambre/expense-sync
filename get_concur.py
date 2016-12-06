@@ -101,9 +101,6 @@ class Concur:
 
         return xmltodict.parse(r.content)
 
-    def post(self, category, data):
-        pass
-
     def revokeToken(self):
         if self.token is not None:
             headers = {'Authorization': 'OAuth ' + self.token}

@@ -12,7 +12,7 @@ from email.mime.application import MIMEApplication
 import csv
 
 
-class ExpenseReports(object):
+class ExpenseReports:
 
     def __init__(self, user):
         self.user = user

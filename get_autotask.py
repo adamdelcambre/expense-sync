@@ -120,11 +120,11 @@ class AutoTask:
         #   return None
 
         # Posting
-        xy = client.service.create(entryArray)
-        return xy
+        posted = client.service.create(entryArray)
+        return posted
 
 if __name__ == '__main__':
     auto = AutoTask("devops@corus360.com")
     back_date = (datetime.today() - timedelta(days=1)).isoformat()
-    d = back_date.replace(' ', 'T')
+    back_date.replace(' ', 'T')
     print(auto.query('ExpenseReport', 'SubmitterId', 'equals', '30708757'))
