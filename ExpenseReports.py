@@ -23,9 +23,11 @@ class ExpenseReports:
         self.log_contents = {'fields': [], 'contents': []}
         self.log_recipient = 'adelcambre@corus360.com'
         self.log_sender = 'ExpenseSync@corus360.com'
+        with open('ids.pkl', 'rb') as id_pickle:
+            self.report_pickle = pickle.load(id_pickle)
 
 
-    def email_log_report(self, send_log=True):
+    def email_log_report(self):
         msg = MIMEMultipart()
         msg['Subject'] = 'Expense Sync Log - {}'.format(self.date_today)
         msg['From'] = self.log_sender
@@ -33,7 +35,7 @@ class ExpenseReports:
 
         logfile_name = 'ExpenseSync_Log_{}.csv'.format(self.date_today)
 
-        with open(logfile_name, 'w') as logwrite:
+        with open(logfile_name, 'wb') as logwrite:
             fieldnames = self.log_contents['fields']
             writer = csv.DictWriter(logwrite, fieldnames=fieldnames)
             writer.writeheader()
@@ -44,19 +46,9 @@ class ExpenseReports:
             part = MIMEApplication(logread.read(), Name=basename(logfile_name))
             part['Content-Disposition'] = 'attachment; filename="{}"'.format(basename(logfile_name))
             msg.attach(part)
-        if send_log:
-            s = smtplib.SMTP('mail.corus360.com')
-            s.sendmail(self.log_sender, self.log_recipient, msg.as_string())
-            s.quit()
-
-
-    def C_reports(self, params=None, getall=False):
-        getresults = self.concur.getReports(params)['ReportsList']['ReportSummary']
-        if getall:
-            reports = [report for report in getresults]
-        else:
-            reports = [report for report in getresults if report['ExpenseUserLoginID'] == self.user]
-        return reports
+        s = smtplib.SMTP('mail.corus360.com')
+        s.sendmail(self.log_sender, self.log_recipient, msg.as_string())
+        s.quit()
 
 
     def C_entries(self, report_ID):
@@ -69,7 +61,7 @@ class ExpenseReports:
             if entries is not None and list(entries) == entries:
                 report_entries.append([entry for entry in entries if self.is_billable(entry)])
                 return report_entries[0]
-            # If it's only one entry it the API doesn't return a list, just the entry
+            # If it's only one entry, the API doesn't return a list, just the entry
             else:
                 try:
                     if self.is_billable(entries):
@@ -84,7 +76,7 @@ class ExpenseReports:
             return report_entries
 
 
-    def AT_post(self, expensereport, entries, test=False):
+    def AT_post(self, expensereport, entries):
         d = datetime.strptime(expensereport['ReportDate'], '%Y-%m-%dT%X')
         while d.weekday() != 5:
             d += timedelta(1)
@@ -110,38 +102,7 @@ class ExpenseReports:
         if entry_output['entries'] == []:
             print("No billable entries.\n")
             return None
-        if test:
-            categories = {v: k for k, v in self.values['ExpenseCategory'].viewitems()}
-            for e in entry_output['entries']:
-                print("{} - ${}".format(categories[e['expense']], round(float(e['amount']), 2)))
-            print('\n')
-        else:
-            return self.autotask.post(entry_output)
-
-
-    def AT_billableProjects(self):
-        projs = self.autotask.query('Project', 'Status', 'Equals', '2')
-        billable_list = []
-        for project in projs[1].Entity:
-            expense_category = project.UserDefinedFields.UserDefinedField[2].Value
-            if int(expense_category) == 2:
-                print('yes')
-                billable_list.append(project)
-        return billable_list
-
-
-    def save_report(self, report_id):
-        with open('ids.pkl', 'r+') as id_pickle:
-            data = pickle.load(id_pickle)
-        with open('ids.pkl', 'w+') as id_pickle:
-            data.append(report_id)
-            pickle.dump(data, id_pickle)
-
-
-    def report_is_saved(self, report_id):
-        with open('ids.pkl', 'r') as id_pickle:
-            data = pickle.load(id_pickle)
-            return report_id in data
+        return self.autotask.post(entry_output)
 
 
     def is_billable(self, entry):
@@ -150,52 +111,41 @@ class ExpenseReports:
         return False
 
 
+    def save_pickle(self):
+        with open('ids.pkl', 'wb') as pfile:
+            pickle.dump(self.report_pickle, pfile)
+
+
     def reset_pickle(self):
-        empty = []
-        with open('ids.pkl', 'w') as id_pickle:
-            pickle.dump(empty, id_pickle)
+        with open('ids.pkl', 'wb') as id_pickle:
+            pickle.dump([], id_pickle)
 
 
-    def main(self, testing=False, get_all=False, email_log=True):
-        back_date = (datetime.today() - timedelta(days=1)).isoformat()
-        report_filter = {'modifiedafterdate': back_date}
-
+    def main(self, testing=False, email_log=True, day_range=1):
+        back_date = (datetime.today() - timedelta(days=day_range)).isoformat()
         with self.concur.token_manager():
+            c_reports = [
+                r for r in self.concur.getReports({'modifiedafterdate': back_date}) if
+                r['ReportId'] not in self.report_pickle]
+            if testing:
+                c_reports = [i for i in c_reports if i['ExpenseUserLoginID'] == self.user]
+            for num, report in enumerate(c_reports):
+                self.AT_post(report, self.C_entries(report['ReportId']))
 
-            if not get_all:
-                report_filter = {}
-
-            concur_reports = self.C_reports(
-                                params=report_filter,
-                                getall=get_all,)
-
-            sync_ids = list(filter(
-                            lambda x: not self.report_is_saved(x),
-                            [rep['ReportId'] for rep in concur_reports]))    
-
-            report_dict = {r['ReportId']: r 
-                            for r in concur_reports 
-                            if r['ReportId'] in sync_ids}
-
-            for num, reportid in enumerate(sync_ids):
-                print("Report #{} - {}".format(num, report_dict[reportid]['ReportName']))
-                print(report_dict[reportid])
-                self.log_contents['fields'] = list(report_dict[reportid])
-                self.log_contents['contents'].append(report_dict[reportid])
-                self.AT_post(
-                    report_dict[reportid], 
-                    self.C_entries(reportid),
-                    test=testing)
-
-        self.email_log_report(send_log=email_log)
+                self.log_contents['fields'] = list(report['ReportId'])
+                self.log_contents['contents'].append(report['ReportId'])
+                if testing:
+                    print("Report #{} - {}".format(num, report['ReportName']))
+        if email_log:
+            self.email_log_report()
 
 
 if __name__ == '__main__':
     exp = ExpenseReports("devops@corus360.com")
-    exp.reset_pickle()
+    exp.reset_pickle() # Exists for testing purposes - clears
     exp.main(
-        testing=True, 
-        get_all=True, 
-        email_log=True
+        testing=True, # searches only reports from test accounts (devops/WebAdmin) and prints to console
+        email_log=False, # Emails log of posted expenses - buggy
+        day_range=800, # How many days back to check for reports
         )
 

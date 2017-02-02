@@ -18,5 +18,5 @@ AUTH = {
     },
 }
 
-with open('auth.pkl', 'w') as auth_file:
+with open('auth.pkl', 'wb') as auth_file:
     pickle.dump(AUTH, auth_file)

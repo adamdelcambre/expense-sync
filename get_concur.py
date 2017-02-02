@@ -71,9 +71,10 @@ class Concur:
             headers=headers,
             params=params
         )
-        return xmltodict.parse(r.content)
+        return list(xmltodict.parse(r.content)['ReportsList']['ReportSummary'])
 
     def lists(self, offset=None, params=None):
+        # Currently unused - needed for transferring projects from AT to concur, but not yet implemented
         headers = {
             'X-ConsumerKey': self.key,
             'Authorization': 'OAuth ' + self.token
