@@ -1,15 +1,11 @@
 from __future__ import print_function
-from collections import OrderedDict
+import pickle
 from get_concur import Concur
 from get_autotask import AutoTask
 from datetime import datetime, timedelta, date
 from WebDriver_config import CONCUR
-import pickle
-from os.path import basename
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.application import MIMEApplication
-import csv
+from es_logging import LogCSV
+
 
 
 class ExpenseReports:
@@ -19,36 +15,9 @@ class ExpenseReports:
         self.autotask = AutoTask(user)
         self.concur = Concur(user)
         self.values = CONCUR['VALUES']
-        self.date_today = date.today().isoformat()
-        self.log_contents = {'fields': [], 'contents': []}
-        self.log_recipient = 'adelcambre@corus360.com'
-        self.log_sender = 'ExpenseSync@corus360.com'
+        # self.logfile = LogCSV()
         with open('ids.pkl', 'rb') as id_pickle:
             self.report_pickle = pickle.load(id_pickle)
-
-
-    def email_log_report(self):
-        msg = MIMEMultipart()
-        msg['Subject'] = 'Expense Sync Log - {}'.format(self.date_today)
-        msg['From'] = self.log_sender
-        msg['To'] = self.log_recipient
-
-        logfile_name = 'ExpenseSync_Log_{}.csv'.format(self.date_today)
-
-        with open(logfile_name, 'wb') as logwrite:
-            fieldnames = self.log_contents['fields']
-            writer = csv.DictWriter(logwrite, fieldnames=fieldnames)
-            writer.writeheader()
-            for content in self.log_contents['contents']:
-                writer.writerow(content)
-
-        with open(logfile_name, 'rb') as logread:
-            part = MIMEApplication(logread.read(), Name=basename(logfile_name))
-            part['Content-Disposition'] = 'attachment; filename="{}"'.format(basename(logfile_name))
-            msg.attach(part)
-        s = smtplib.SMTP('mail.corus360.com')
-        s.sendmail(self.log_sender, self.log_recipient, msg.as_string())
-        s.quit()
 
 
     def C_entries(self, report_ID):
@@ -83,6 +52,7 @@ class ExpenseReports:
         entry_output = {
             'name': expensereport['ReportName'],
             'weekending': str(d),
+            'userid': expensereport['ExpenseUserLoginID'],
             'entries': [],
         }
         if entries is not None:
@@ -100,15 +70,14 @@ class ExpenseReports:
         else:
             entry_output['entries'] == []
         if entry_output['entries'] == []:
+        	# Skip reports with no billable entries or associated project
             print("No billable entries.\n")
             return None
         return self.autotask.post(entry_output)
 
 
     def is_billable(self, entry):
-        if entry['ExpenseTypeName'] in ['Parking', 'Car Rental', 'Airfare', 'Transportation', 'Hotel']:
-            return True
-        return False
+        return entry['ExpenseTypeName'] in ['Parking', 'Car Rental', 'Airfare', 'Transportation', 'Hotel']
 
 
     def save_pickle(self):
@@ -131,13 +100,11 @@ class ExpenseReports:
                 c_reports = [i for i in c_reports if i['ExpenseUserLoginID'] == self.user]
             for num, report in enumerate(c_reports):
                 self.AT_post(report, self.C_entries(report['ReportId']))
-
-                self.log_contents['fields'] = list(report['ReportId'])
-                self.log_contents['contents'].append(report['ReportId'])
                 if testing:
                     print("Report #{} - {}".format(num, report['ReportName']))
         if email_log:
             self.email_log_report()
+
 
 
 if __name__ == '__main__':
@@ -149,3 +116,8 @@ if __name__ == '__main__':
         day_range=800, # How many days back to check for reports
         )
 
+# TODO:
+# Sync projects from AT to Concur - Separate function
+# Ignore non-project posts on concur 
+# Choose correct Submitter id [COMPLETED - PENDING TESTING]
+# SUBMIT after posting

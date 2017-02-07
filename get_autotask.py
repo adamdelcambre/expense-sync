@@ -16,11 +16,13 @@ class AutoTask:
             username=AUTH['Autotask']['username'],
             password=AUTH['Autotask']['userpass'],
         )
+
         client = Client(
             url=WSDL_URL,
             location=SOAP_URL,
             proxy=PROXIES,
-            transport=t
+            transport=t,
+            faults=False
         )
         return client.service.query(
             xmltodict.unparse(
@@ -48,7 +50,7 @@ class AutoTask:
                 faults=False
             )
 
-            r = self.query('Resource', 'Email', 'equals', self.user)
+            r = self.query('Resource', 'Email', 'equals', params['userid'])
             if hasattr(r.EntityResults, 'Entity'):
                 userid = r.EntityResults.Entity[0].id
             else:
@@ -63,14 +65,13 @@ class AutoTask:
             report.Name = params['name']
             report.WeekEnding = params['weekending']
             report.id = '0'
-            report.Submit = True
+            report.Submit = 1
             report.Status = 1
             entityArray.Entity.append(report)
             # Posting
             x = client.service.create(entityArray)
 
             # Making sure it posted and getting the report id
-            
             repid = x[1].EntityResults[0][0].id
         except KeyError:
             return (False, False)
@@ -91,7 +92,6 @@ class AutoTask:
         entryArray = client.factory.create('ArrayOfEntity')
 
         # Building Expenses
-        # try:
         for x in params['entries']:
             entry = client.factory.create('ExpenseItem')
             entry.ExpenseReportID = repid
@@ -101,8 +101,6 @@ class AutoTask:
             # hotel = 29685285 meals = 29685286  2 = mileage
             entry.ExpenseCategory = x['expense']
             entry.HaveReceipt = True
-            # entry.GLCode = ?
-            # entry.AccountID = 29707842
             if x['expense'] == 2:
                 entry.Miles = x['miles']
                 entry.Destination = x['to']
@@ -110,21 +108,11 @@ class AutoTask:
             entry.PaymentType = x['paytype']
             # 5 employee paid 9 company paid
             entry.BillableToAccount = True
-            if x['description'] is None:
-                entry.Description = 'None'
-            else:
-                entry.Description = x['description']
+            entry.Description = str(x['description'])
+            # entry.ProjectID = ?? <------------------- Need to find proj id
             entryArray.Entity.append(entry)
-        # except:
-        #   print 'on entry'
-        #   return None
+
 
         # Posting
         posted = client.service.create(entryArray)
         return posted
-
-if __name__ == '__main__':
-    auto = AutoTask("devops@corus360.com")
-    back_date = (datetime.today() - timedelta(days=1)).isoformat()
-    back_date.replace(' ', 'T')
-    print(auto.query('ExpenseReport', 'SubmitterId', 'equals', '30708757'))

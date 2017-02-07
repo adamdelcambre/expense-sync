@@ -41,13 +41,13 @@ CONCUR = {
             'Entertainment': ('Entertainment - Client', 'Entertainment - Staff',),
             'Phone' : ('Mobile/Cellular Phone'),
             'Transportation': ('Public Transport', 'Taxi', 'Personal Car Mileage', 'Fuel'),#YES
-            'Hotel': ('Hotel'),#YES
+            'Hotel': ('Hotel'),#Billable
             'Meals': ('Breakfast', 'Business Meals', 'Dinner', 'Lunch', 'Snacks/Beverages',),
             'Per Diem': ('Per Diem'),
             'Other': ('Other', 'Gifts - Clients', 'Gifts - Staff', 'Miscellaneous', 'Postage'),
-            'Airfare': ('Airfare', 'Airline Fees'),#YES
-            'Car Rental': ('Car Rental'),#YES
-            'Parking': ('Parking'),#YES
+            'Airfare': ('Airfare', 'Airline Fees'),#Billable
+            'Car Rental': ('Car Rental'),#Billable
+            'Parking': ('Parking'),#Billable
         },
 
         'WorkType': {
