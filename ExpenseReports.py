@@ -5,7 +5,10 @@ from get_autotask import AutoTask
 from datetime import datetime, timedelta, date
 from WebDriver_config import CONCUR
 from es_logging import LogCSV
+import ssl
 
+if hasattr(ssl, '_create_unverified_context'):
+    ssl._create_default_https_context = ssl._create_unverified_context
 
 
 class ExpenseReports:
@@ -15,7 +18,7 @@ class ExpenseReports:
         self.autotask = AutoTask(user)
         self.concur = Concur(user)
         self.values = CONCUR['VALUES']
-        # self.logfile = LogCSV()
+        self.logfile = LogCSV()
         with open('ids.pkl', 'rb') as id_pickle:
             self.report_pickle = pickle.load(id_pickle)
 
@@ -54,7 +57,7 @@ class ExpenseReports:
             'weekending': str(d),
             'userid': expensereport['ExpenseUserLoginID'],
             'entries': [],
-        }
+            }
         if entries is not None:
             for entry in entries:
                 for y in self.values['alias'].keys():
@@ -70,9 +73,13 @@ class ExpenseReports:
         else:
             entry_output['entries'] == []
         if entry_output['entries'] == []:
-        	# Skip reports with no billable entries or associated project
+            # Skip reports with no billable entries or associated project
             print("No billable entries.\n")
             return None
+        self.logfile.content.append({
+            'ReportName': entry_output['name'],
+            'User': entry_output['userid'],
+            })
         return self.autotask.post(entry_output)
 
 
@@ -102,8 +109,9 @@ class ExpenseReports:
                 self.AT_post(report, self.C_entries(report['ReportId']))
                 if testing:
                     print("Report #{} - {}".format(num, report['ReportName']))
+        self.logfile.write_csv()
         if email_log:
-            self.email_log_report()
+            self.logfile.send_log()
 
 
 
@@ -112,7 +120,7 @@ if __name__ == '__main__':
     exp.reset_pickle() # Exists for testing purposes - clears
     exp.main(
         testing=True, # searches only reports from test accounts (devops/WebAdmin) and prints to console
-        email_log=False, # Emails log of posted expenses - buggy
+        email_log=True, # Emails log of posted expenses
         day_range=800, # How many days back to check for reports
         )
 

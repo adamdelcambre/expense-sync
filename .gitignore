@@ -1,3 +1,4 @@
 auth.pkl
 *.pyc
 test.py
+*.csv

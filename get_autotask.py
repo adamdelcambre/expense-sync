@@ -51,8 +51,8 @@ class AutoTask:
             )
 
             r = self.query('Resource', 'Email', 'equals', params['userid'])
-            if hasattr(r.EntityResults, 'Entity'):
-                userid = r.EntityResults.Entity[0].id
+            if hasattr(r[1].EntityResults, 'Entity'):
+                userid = r[1].EntityResults.Entity[0].id
             else:
                 return (False, False)
 
@@ -65,10 +65,10 @@ class AutoTask:
             report.Name = params['name']
             report.WeekEnding = params['weekending']
             report.id = '0'
-            report.Submit = 1
             report.Status = 1
+            report.Submit = True
             entityArray.Entity.append(report)
-            # Posting
+            # Posting Report
             x = client.service.create(entityArray)
 
             # Making sure it posted and getting the report id
@@ -98,7 +98,6 @@ class AutoTask:
             entry.id = 0
             entry.ExpenseDate = x['date']
             entry.ExpenseAmount = x['amount']
-            # hotel = 29685285 meals = 29685286  2 = mileage
             entry.ExpenseCategory = x['expense']
             entry.HaveReceipt = True
             if x['expense'] == 2:
@@ -106,13 +105,12 @@ class AutoTask:
                 entry.Destination = x['to']
                 entry.Origin = x['from']
             entry.PaymentType = x['paytype']
-            # 5 employee paid 9 company paid
             entry.BillableToAccount = True
             entry.Description = str(x['description'])
             # entry.ProjectID = ?? <------------------- Need to find proj id
             entryArray.Entity.append(entry)
 
 
-        # Posting
+        # Posting Expenses to report
         posted = client.service.create(entryArray)
         return posted
