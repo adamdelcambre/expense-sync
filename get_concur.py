@@ -10,8 +10,7 @@ from contextlib import contextmanager
 
 
 class Concur:
-    def __init__(self, user):
-        self.user = user
+    def __init__(self):
         self.username = AUTH['Concur']['username']
         self.password = AUTH['Concur']['userpass']
         self.key = CONCUR['KEY']
@@ -31,7 +30,6 @@ class Concur:
             self.revokeToken()
 
     def getToken(self):
-        headers = {'X-ConsumerKey': self.key}
         params = {
             'client_id': self.key,
             'client_secret': self.secret
@@ -39,7 +37,7 @@ class Concur:
         r = requests.get(
             self.authurl,
             params=params,
-            headers=headers,
+            headers=self.headers(),
             auth=(self.username, self.password)
         )
         regx = re.search("<Token>(.*)</Token>", r.text)
@@ -47,7 +45,7 @@ class Concur:
         params['code'] = reqtoken
         r = requests.get(
             self.authurl,
-            headers=headers,
+            headers=self.headers(),
             params=params,
             auth=(self.username, self.password)
         )
@@ -59,47 +57,56 @@ class Concur:
         else:
             return None
 
+    def headers(self):
+        payload = {'X-ConsumerKey': self.key}
+        if self.token:
+            payload['Authorization'] = 'OAuth ' + self.token
+        return payload
+
     def getReports(self, params):
         if params is None:
             params = {}
-        headers = {
-            'X-ConsumerKey': self.key,
-            'Authorization': 'OAuth ' + self.token
-        }
         r = requests.get(
             self.url,
-            headers=headers,
+            headers=self.headers(),
             params=params
         )
         return list(xmltodict.parse(r.content)['ReportsList']['ReportSummary'])
 
-    def lists(self, offset=None, params=None):
-        # Currently unused - needed for transferring projects from AT to concur, but not yet implemented
-        headers = {
-            'X-ConsumerKey': self.key,
-            'Authorization': 'OAuth ' + self.token
-        }
+    def projects(self, offset=None):
+        params = {'listId': CONCUR['PROJECT_ID'], 'limit':100}
         if offset:
-            r = requests.get(
-                offset,
-                headers=headers,
-            )
+            url = offset
+            params = None
         else:
-            r = requests.get(
-                CONCUR['LIST_URL'],
-                headers=headers,
-                params=params,
-            )
-        print(r.url)
+            url = CONCUR['LIST_URL']
+        r = requests.get(
+            url,
+            headers=self.headers(),
+            params=params,
+        )
         return xmltodict.parse(r.content)
 
-    def report(self, e_id):
-        headers = {
-            'X-ConsumerKey': self.key,
-            'Authorization': 'OAuth ' + self.token
-        }
-        r = requests.get(self.url2 + e_id, headers=headers)
+    def post_project(self, p):
+        name, p_id = p
+        headers = self.headers()
+        headers['Accept'] = "application/json"
+        headers['Content-Type'] = "application/json"
+        content = {
+            "Level1Code": p_id,
+            "ListID": CONCUR['PROJECT_ID'],
+            "Name": name,
+            }
+        posted = requests.post(
+            CONCUR['LIST_URL'],
+            headers=self.headers(),
+            json=content,
+            )
+        print(content)
+        return posted.content
 
+    def report(self, e_id):
+        r = requests.get(self.url2 + e_id, headers=self.headers())
         return xmltodict.parse(r.content)
 
     def revokeToken(self):
@@ -118,4 +125,3 @@ class Concur:
             return response.status_code
         else:
             return None
-

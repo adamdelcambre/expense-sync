@@ -39,4 +39,3 @@ class LogCSV:
             self.msg.as_string()
             )
         s.quit()
-

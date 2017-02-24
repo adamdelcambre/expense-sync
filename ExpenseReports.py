@@ -13,10 +13,9 @@ if hasattr(ssl, '_create_unverified_context'):
 
 class ExpenseReports:
 
-    def __init__(self, user):
-        self.user = user
-        self.autotask = AutoTask(user)
-        self.concur = Concur(user)
+    def __init__(self):
+        self.autotask = AutoTask()
+        self.concur = Concur()
         self.values = CONCUR['VALUES']
         self.logfile = LogCSV()
         with open('ids.pkl', 'rb') as id_pickle:
@@ -104,7 +103,7 @@ class ExpenseReports:
                 r for r in self.concur.getReports({'modifiedafterdate': back_date}) if
                 r['ReportId'] not in self.report_pickle]
             if testing:
-                c_reports = [i for i in c_reports if i['ExpenseUserLoginID'] == self.user]
+                c_reports = [i for i in c_reports if i['ExpenseUserLoginID'] == "devops@corus360.com"]
             for num, report in enumerate(c_reports):
                 self.AT_post(report, self.C_entries(report['ReportId']))
                 if testing:
@@ -116,11 +115,11 @@ class ExpenseReports:
 
 
 if __name__ == '__main__':
-    exp = ExpenseReports("devops@corus360.com")
+    exp = ExpenseReports()
     exp.reset_pickle() # Exists for testing purposes - clears
     exp.main(
         testing=True, # searches only reports from test accounts (devops/WebAdmin) and prints to console
-        email_log=True, # Emails log of posted expenses
+        email_log=False, # Emails log of posted expenses
         day_range=800, # How many days back to check for reports
         )
 

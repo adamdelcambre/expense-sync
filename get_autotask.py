@@ -8,8 +8,45 @@ from WebDriver_config import AUTH, SOAP_URL, WSDL_URL, PROXIES
 
 class AutoTask:
 
-    def __init__(self, user):
-        self.user = user
+    def __init__(self):
+        pass
+
+    def query_projects(self, maxid=0):
+        t = HttpAuthenticated(
+            username=AUTH['Autotask']['username'],
+            password=AUTH['Autotask']['userpass'],
+        )
+
+        client = Client(
+            url=WSDL_URL,
+            location=SOAP_URL,
+            proxy=PROXIES,
+            transport=t,
+            faults=False
+        )
+        query = """<queryxml>
+                        <entity>Project</entity>
+                        <query>
+                            <condition>
+                                <field>Status
+                                    <expression op="lessthan">5</expression>
+                                </field>
+                            </condition>
+                            <condition>
+                                <field>id
+                                    <expression op="greaterthan">{}</expression>
+                                </field>
+                            </condition>
+                        </query>
+                    </queryxml>""".format(str(maxid))
+        result = client.service.query(query)
+        try:
+            result = result[1]['EntityResults']['Entity']
+            max_id = int(max([x['id'] for x in result]))
+        except:
+            result = []
+            max_id = 0
+        return (result, max_id)
 
     def query(self, entity, field, op, value):
         t = HttpAuthenticated(
