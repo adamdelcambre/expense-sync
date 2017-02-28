@@ -45,12 +45,11 @@ def is_svd(p):
 def c_project(p):
     concur = Concur()
     with concur.token_manager():
-        print(concur.headers())
         print(concur.post_project(p))
 
 
 def copy_projects():
-    c_project(("STEWART & STEVENSON (NB) REPLICATION", "P20160801.0002"))
+    c_project(("TESTING PROJECTS", "P90000001.0001"))
     
 
 if __name__ == '__main__':

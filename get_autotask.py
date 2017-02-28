@@ -1,9 +1,11 @@
 from __future__ import print_function
-from suds.client import Client
-from suds.transport.http import HttpAuthenticated
 import xmltodict
 from datetime import datetime, timedelta
+import logging
 from WebDriver_config import AUTH, SOAP_URL, WSDL_URL, PROXIES
+from suds.client import Client
+logging.getLogger('suds.client').setLevel(logging.CRITICAL)
+from suds.transport.http import HttpAuthenticated
 
 
 class AutoTask:
@@ -109,9 +111,32 @@ class AutoTask:
             x = client.service.create(entityArray)
 
             # Making sure it posted and getting the report id
-            repid = x[1].EntityResults[0][0].id
+            try:
+                repid = x[1].EntityResults[0][0].id
+            except:
+                print('Posting report "{}" failed.'.format(params['name']))
+                return None
         except KeyError:
             return (False, False)
+
+        t = HttpAuthenticated(
+            username=AUTH['Autotask']['username'],
+            password=AUTH['Autotask']['userpass'],
+        )
+
+        client = Client(
+            url=WSDL_URL,
+
+            location=SOAP_URL,
+            proxy=PROXIES,
+            transport=t,
+            faults=False
+        )
+        try:
+            pid = self.query('Project', 'ProjectName', 'equals', 'State of Louisiana DR Test')
+            pid = pid[1]['EntityResults']['Entity'][0].id
+        except:
+            pid = None
 
         t = HttpAuthenticated(
             username=AUTH['Autotask']['username'],
@@ -144,10 +169,12 @@ class AutoTask:
             entry.PaymentType = x['paytype']
             entry.BillableToAccount = True
             entry.Description = str(x['description'])
-            # entry.ProjectID = ?? <------------------- Need to find proj id
+            if pid:
+                entry.ProjectID = pid
             entryArray.Entity.append(entry)
 
-
         # Posting Expenses to report
+        entityArray.Entity[0].id = repid
         posted = client.service.create(entryArray)
+        client.service.update(entityArray)
         return posted

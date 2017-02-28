@@ -68,6 +68,7 @@ class ExpenseReports:
                     'paytype': 5,
                     'description': entry['VendorDescription'],
                     'date': entry['TransactionDate'],
+                    'project': entry['Custom1']['Value']
                 })
         else:
             entry_output['entries'] == []
@@ -111,7 +112,6 @@ class ExpenseReports:
         self.logfile.write_csv()
         if email_log:
             self.logfile.send_log()
-
 
 
 if __name__ == '__main__':

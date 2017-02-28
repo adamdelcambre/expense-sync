@@ -90,19 +90,18 @@ class Concur:
     def post_project(self, p):
         name, p_id = p
         headers = self.headers()
-        headers['Accept'] = "application/json"
-        headers['Content-Type'] = "application/json"
-        content = {
-            "Level1Code": p_id,
-            "ListID": CONCUR['PROJECT_ID'],
-            "Name": name,
-            }
+        headers['Accept'] = "application/xml"
+        headers['Content-type'] = "application/xml"
+        content = """<?xml version="1.0" encoding="UTF-8"?><Level1Code>{}</Level1Code><ListID>{}</ListID><Name>{}</Name>""".format(p_id, CONCUR['PROJECT_ID'], name)
         posted = requests.post(
             CONCUR['LIST_URL'],
-            headers=self.headers(),
-            json=content,
+            data=content,
+            headers=headers,
             )
-        print(content)
+        print(posted.request.url)
+        print(posted.request.headers)
+        print(posted.request.body)
+        print(posted)
         return posted.content
 
     def report(self, e_id):
