@@ -12,7 +12,7 @@ CONCUR = {
     'REPORT_URL': "https://www.concursolutions.com/api/expense/expensereport/v2.0/report/",
     'USER_URL': "https://www.concursolutions.com/api/user/v1.0/user",
     'REVOKE_URL': 'https://www.concursolutions.com/net2/oauth2/revoketoken.ashx',
-    'LIST_URL': 'https://www.concursolutions.com/api/v3.0/common/listitems',
+    'LIST_URL': 'https://www.concursolutions.com/api/expense/list/v1.0/',
     'PROJECT_ID': 'gWk3uaR6loEqhEfAooPQJ$phoz9xSnZyBvSw',
     'VALUES': {
         'Status': {

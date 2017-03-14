@@ -11,28 +11,28 @@ import requests
 def c_projects():
     concur = Concur()
     with concur.token_manager():
-        nextpage = 1
-        projects = []
-        while nextpage:
-            if nextpage == 1:
-                p = concur.projects()
-            else:
-                p = concur.projects(offset=nextpage)
-            projects += [(i['Name'].upper(), i['Level1Code']) for i in p['ListItems']['Items']['ListItem']]
-            nextpage = p['ListItems']['NextPage']
-            if str(nextpage) != nextpage:
-                nextpage = None
-    return projects
-
+        return [(valid_string(x['name'].upper()), x['level1code']) for x in concur.projects()['list-items']['list-item']]
 
 def a_projects():
     auto = AutoTask()
     q = auto.query_projects(maxid=0)
     projects = []
     for x in [i for i in q[0] if is_svd(i)]:
-        projects.append((x['ProjectName'].upper(), x['ProjectNumber']))
+        projects.append((valid_string(x['ProjectName'].upper()), x['ProjectNumber']))
     return projects
 
+def valid_string(s):
+    repl = {
+        '"': '&quot;',
+        '&': '&amp;',
+        '\'': '&apos;',
+        '<': '&lt;',
+        '>': '&gt;',
+    }
+    for i in ['"', '&', '\'', '<', '>']:
+        if i in s:
+            s = s.replace(i, repl[i])
+    return s
 
 def is_svd(p):
     # Checks if AT project department is Prof. Service Delivery & Operations (id 29708067)
@@ -41,18 +41,17 @@ def is_svd(p):
     except:
         return False
 
-
-def c_project(p):
+def sync_projects():
+    cproj = c_projects()
+    aproj = a_projects()
+    unsynced = [p for p in aproj if p not in cproj]
     concur = Concur()
     with concur.token_manager():
-        print(concur.post_project(p))
+        concur.post_projects(unsynced)
+        
 
-
-def copy_projects():
-    c_project(("TESTING PROJECTS", "P90000001.0001"))
-    
 
 if __name__ == '__main__':
     if hasattr(ssl, '_create_unverified_context'):
         ssl._create_default_https_context = ssl._create_unverified_context
-    copy_projects()
+    print(sync_projects())

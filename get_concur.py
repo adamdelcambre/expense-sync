@@ -6,7 +6,19 @@ from WebDriver_config import CONCUR, AUTH
 from contextlib import contextmanager
 
 
-# example_parameters = {'modifiedafterdate':'2016-06-01T00:00:00'}
+
+def list_xml(items):
+    template = """\
+    <list-item>
+        <name>{}</name>
+        <level1code>{}</level1code>
+    </list-item>"""
+    batch = '\n'.join([template.format(x[0], x[1]) for x in items])
+    wrapper = """
+    <list-item-batch xmlns="http://www.concursolutions.com/api/expense/list/2010/02">
+    {}
+    </list-item-batch>"""
+    return wrapper.format(batch)
 
 
 class Concur:
@@ -73,34 +85,21 @@ class Concur:
         )
         return list(xmltodict.parse(r.content)['ReportsList']['ReportSummary'])
 
-    def projects(self, offset=None):
-        params = {'listId': CONCUR['PROJECT_ID'], 'limit':100}
-        if offset:
-            url = offset
-            params = None
-        else:
-            url = CONCUR['LIST_URL']
+    def projects(self):
         r = requests.get(
-            url,
+            CONCUR['LIST_URL'] + CONCUR['PROJECT_ID'] + '/items',
             headers=self.headers(),
-            params=params,
         )
         return xmltodict.parse(r.content)
 
-    def post_project(self, p):
-        name, p_id = p
+    def post_projects(self, plist):
         headers = self.headers()
-        headers['Accept'] = "application/xml"
         headers['Content-type'] = "application/xml"
-        content = """<?xml version="1.0" encoding="UTF-8"?><Level1Code>{}</Level1Code><ListID>{}</ListID><Name>{}</Name>""".format(p_id, CONCUR['PROJECT_ID'], name)
         posted = requests.post(
-            CONCUR['LIST_URL'],
-            data=content,
+            CONCUR['LIST_URL'] + CONCUR['PROJECT_ID'] + '/batch?type=create',
+            data=list_xml(plist),
             headers=headers,
             )
-        print(posted.request.url)
-        print(posted.request.headers)
-        print(posted.request.body)
         print(posted)
         return posted.content
 
@@ -124,3 +123,4 @@ class Concur:
             return response.status_code
         else:
             return None
+

@@ -76,6 +76,7 @@ class ExpenseReports:
             # Skip reports with no billable entries or associated project
             print("No billable entries.\n")
             return None
+        self.report_pickle.append(expensereport['ReportId'])
         self.logfile.content.append({
             'ReportName': entry_output['name'],
             'User': entry_output['userid'],
@@ -110,21 +111,15 @@ class ExpenseReports:
                 if testing:
                     print("Report #{} - {}".format(num, report['ReportName']))
         self.logfile.write_csv()
+        self.save_pickle()
         if email_log:
             self.logfile.send_log()
 
 
 if __name__ == '__main__':
     exp = ExpenseReports()
-    exp.reset_pickle() # Exists for testing purposes - clears
     exp.main(
-        testing=True, # searches only reports from test accounts (devops/WebAdmin) and prints to console
+        testing=False, # searches only reports from test accounts (devops/WebAdmin) and prints to console
         email_log=False, # Emails log of posted expenses
-        day_range=800, # How many days back to check for reports
+        day_range=1, # How many days back to check for reports
         )
-
-# TODO:
-# Sync projects from AT to Concur - Separate function
-# Ignore non-project posts on concur 
-# Choose correct Submitter id [COMPLETED - PENDING TESTING]
-# SUBMIT after posting
