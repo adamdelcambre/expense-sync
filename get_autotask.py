@@ -126,17 +126,16 @@ class AutoTask:
 
         client = Client(
             url=WSDL_URL,
-
             location=SOAP_URL,
             proxy=PROXIES,
             transport=t,
             faults=False
         )
         try:
-            pid = self.query('Project', 'ProjectName', 'equals', 'State of Louisiana DR Test')
+            pid = self.query('Project', 'ProjectName', 'equals', params['project'])
             pid = pid[1]['EntityResults']['Entity'][0].id
         except:
-            pid = None
+            return None
 
         t = HttpAuthenticated(
             username=AUTH['Autotask']['username'],
@@ -149,7 +148,7 @@ class AutoTask:
             proxy=PROXIES,
             transport=t,
             faults=False
-        )
+            )
 
         entryArray = client.factory.create('ArrayOfEntity')
 

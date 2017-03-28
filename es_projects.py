@@ -45,6 +45,8 @@ def sync_projects():
     cproj = c_projects()
     aproj = a_projects()
     unsynced = [p for p in aproj if p not in cproj]
+    for proj in unsynced:
+        print('Posting project: {}'.format(proj))
     concur = Concur()
     with concur.token_manager():
         concur.post_projects(unsynced)
@@ -54,4 +56,5 @@ def sync_projects():
 if __name__ == '__main__':
     if hasattr(ssl, '_create_unverified_context'):
         ssl._create_default_https_context = ssl._create_unverified_context
-    print(sync_projects())
+    sync_projects()
+    

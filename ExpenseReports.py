@@ -7,6 +7,8 @@ from WebDriver_config import CONCUR
 from es_logging import LogCSV
 import ssl
 
+
+
 if hasattr(ssl, '_create_unverified_context'):
     ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -74,7 +76,6 @@ class ExpenseReports:
             entry_output['entries'] == []
         if entry_output['entries'] == []:
             # Skip reports with no billable entries or associated project
-            print("No billable entries.\n")
             return None
         self.report_pickle.append(expensereport['ReportId'])
         self.logfile.content.append({
@@ -120,6 +121,6 @@ if __name__ == '__main__':
     exp = ExpenseReports()
     exp.main(
         testing=False, # searches only reports from test accounts (devops/WebAdmin) and prints to console
-        email_log=False, # Emails log of posted expenses
+        email_log=True, # Emails log of posted expenses
         day_range=1, # How many days back to check for reports
         )
