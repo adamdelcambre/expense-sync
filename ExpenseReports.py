@@ -50,7 +50,7 @@ class ExpenseReports:
 
 
     def AT_post(self, expensereport, entries):
-        d = datetime.strptime(expensereport['ReportDate'], '%Y-%m-%dT%X')
+        d = datetime.strptime(expensereport['ReportDate'].split('.')[0], '%Y-%m-%dT%X')
         while d.weekday() != 5:
             d += timedelta(1)
         entry_output = {
