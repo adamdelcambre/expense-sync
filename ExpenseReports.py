@@ -61,21 +61,28 @@ class ExpenseReports:
             }
         if entries is not None:
             for entry in entries:
+                try:
+                    project = entry['Custom4']['Value']
+                except:
+                    pass
                 for y in self.values['alias'].keys():
                     if entry['ExpenseTypeName'] in self.values['alias'][y]:
                         expense = self.values['ExpenseCategory'][y]
-                entry_output['entries'].append({
-                    'amount': entry['TransactionAmount'],
-                    'expense': expense,
-                    'paytype': 5,
-                    'description': entry['VendorDescription'],
-                    'date': entry['TransactionDate'],
-                    'project': entry['Custom1']['Value']
-                })
+                try:
+                    entry_output['entries'].append({
+                        'amount': entry['TransactionAmount'],
+                        'expense': expense,
+                        'paytype': 5,
+                        'description': entry['VendorDescription'],
+                        'date': entry['TransactionDate'],
+                        'project': project
+                    })
+                except:
+                    pass
         else:
             entry_output['entries'] == []
         if entry_output['entries'] == []:
-            # Skip reports with no billable entries or associated project
+            # Skip reports with no billable project-associated entries
             return None
         self.report_pickle.append(expensereport['ReportId'])
         self.logfile.content.append({
