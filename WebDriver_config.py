@@ -1,6 +1,9 @@
 import pickle
+import os
 
-with open('auth.pkl', 'r') as auth:
+
+authfile = os.path.join(os.path.dirname(__file__), 'auth.pkl')
+with open(authfile, 'r') as auth:
     AUTH = pickle.load(auth)
 
 

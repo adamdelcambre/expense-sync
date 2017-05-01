@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, date
 from WebDriver_config import CONCUR
 from es_logging import LogCSV
 import ssl
+import os
 
 
 
@@ -20,7 +21,8 @@ class ExpenseReports:
         self.concur = Concur()
         self.values = CONCUR['VALUES']
         self.logfile = LogCSV()
-        with open('ids.pkl', 'rb') as id_pickle:
+        self.idpkl = os.path.join(os.path.dirname(__file__), 'ids.pkl')
+        with open(self.idpkl, 'rb') as id_pickle:
             self.report_pickle = pickle.load(id_pickle)
 
 
@@ -97,12 +99,12 @@ class ExpenseReports:
 
 
     def save_pickle(self):
-        with open('ids.pkl', 'wb') as pfile:
+        with open(self.idpkl, 'wb') as pfile:
             pickle.dump(self.report_pickle, pfile)
 
 
     def reset_pickle(self):
-        with open('ids.pkl', 'wb') as id_pickle:
+        with open(self.idpkl, 'wb') as id_pickle:
             pickle.dump([], id_pickle)
 
 
