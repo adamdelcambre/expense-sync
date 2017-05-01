@@ -93,6 +93,7 @@ class AutoTask:
             if hasattr(r[1].EntityResults, 'Entity'):
                 userid = r[1].EntityResults.Entity[0].id
             else:
+                print('Error retrieving AT ID for report.')
                 return (False, False)
 
             # Building Array
@@ -113,10 +114,12 @@ class AutoTask:
             # Making sure it posted and getting the report id
             try:
                 repid = x[1].EntityResults[0][0].id
-            except:
+            except Exception as e:
                 print('Posting report "{}" failed.'.format(params['name']))
+                print('Error retrieving user ID: {}'.format(e))
                 return None
         except KeyError:
+            print('Error with report "{}": {}'.format(params['name'], e))
             return (False, False)
 
         t = HttpAuthenticated(
@@ -132,11 +135,11 @@ class AutoTask:
             faults=False
         )
         try:
-            pid = self.query('Project', 'ProjectName', 'equals', params['project'])
+            pid = self.query('Project', 'ProjectNumber', 'equals', params['project'])
             pid = pid[1]['EntityResults']['Entity'][0].id
-        except:
-            return None
-
+        except Exception as e:
+            print('Error retrieving project for report "{}": {}'.format(params['name'], e))
+            
         t = HttpAuthenticated(
             username=AUTH['Autotask']['username'],
             password=AUTH['Autotask']['userpass'],

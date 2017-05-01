@@ -62,7 +62,7 @@ class ExpenseReports:
         if entries is not None:
             for entry in entries:
                 try:
-                    project = entry['Custom4']['Value']
+                    project = entry['Custom4']['Code']
                 except:
                     pass
                 for y in self.values['alias'].keys():
