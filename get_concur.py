@@ -92,11 +92,11 @@ class Concur:
         )
         return xmltodict.parse(r.content)
 
-    def post_projects(self, plist):
+    def post_projects(self, plist, post_type='create'):
         headers = self.headers()
         headers['Content-type'] = "application/xml"
         posted = requests.post(
-            CONCUR['LIST_URL'] + CONCUR['PROJECT_ID'] + '/batch?type=create',
+            CONCUR['LIST_URL'] + CONCUR['PROJECT_ID'] + '/batch?type={}'.format(post_type),
             data=list_xml(plist),
             headers=headers,
             )
