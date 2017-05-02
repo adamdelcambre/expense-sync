@@ -54,7 +54,6 @@ def sync_projects():
         print('Removing project: {}'.format(proj))
     concur = Concur()
     with concur.token_manager():
-        pass
         concur.post_projects(unsynced)
         concur.post_projects(inactive, post_type='delete')
 

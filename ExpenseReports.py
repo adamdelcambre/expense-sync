@@ -7,6 +7,7 @@ from WebDriver_config import CONCUR
 from es_logging import LogCSV
 import ssl
 import os
+import sys
 
 
 
@@ -129,7 +130,7 @@ class ExpenseReports:
 if __name__ == '__main__':
     exp = ExpenseReports()
     exp.main(
-        testing=False, # searches only reports from test accounts (devops/WebAdmin) and prints to console
+        testing=sys.argv[-1] == '-test', # searches only reports from test accounts (devops/WebAdmin) and prints to console
         email_log=True, # Emails log of posted expenses
         day_range=1, # How many days back to check for reports
         )
