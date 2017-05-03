@@ -134,13 +134,7 @@ class AutoTask:
             transport=t,
             faults=False
         )
-        print(params['project'])
-        try:
-            pid = self.query('Project', 'ProjectNumber', 'equals', params['project'])
-            pid = pid[1]['EntityResults']['Entity'][0]['id']
-        except Exception as e:
-            print('Error retrieving project for report "{}": {}'.format(params['name'], params['project']))
-            return None
+
 
         t = HttpAuthenticated(
             username=AUTH['Autotask']['username'],
@@ -159,6 +153,12 @@ class AutoTask:
 
         # Building Expenses
         for x in params['entries']:
+            try:
+                pid = self.query('Project', 'ProjectNumber', 'equals', x['project'])
+                pid = pid[1]['EntityResults']['Entity'][0]['id']
+            except Exception as e:
+                print('Error retrieving project for report "{}": {}'.format(params['name'], x['project']))
+                pid = None
             entry = client.factory.create('ExpenseItem')
             entry.ExpenseReportID = repid
             entry.id = 0
