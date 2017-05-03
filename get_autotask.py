@@ -24,7 +24,7 @@ class AutoTask:
             location=SOAP_URL,
             proxy=PROXIES,
             transport=t,
-            faults=False
+            faults=False,
         )
         query = """<queryxml>
                         <entity>Project</entity>
@@ -134,12 +134,14 @@ class AutoTask:
             transport=t,
             faults=False
         )
+        print(params['project'])
         try:
             pid = self.query('Project', 'ProjectNumber', 'equals', params['project'])
-            pid = pid[1]['EntityResults']['Entity'][0].id
+            pid = pid[1]['EntityResults']['Entity'][0]['id']
         except Exception as e:
-            print('Error retrieving project for report "{}": {}'.format(params['name'], e))
-            
+            print('Error retrieving project for report "{}": {}'.format(params['name'], params['project']))
+            return None
+
         t = HttpAuthenticated(
             username=AUTH['Autotask']['username'],
             password=AUTH['Autotask']['userpass'],

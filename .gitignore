@@ -2,3 +2,4 @@ auth.pkl
 *.pyc
 test.py
 *.csv
+ids.pkl
