@@ -64,6 +64,12 @@ class ExpenseReports:
             }
         if entries is not None:
             for entry in entries:
+                bill = None
+                if entry['Custom6']:
+                    if entry['Custom6']['Value'] == u'Customer Billable':
+                        bill = True
+                    elif entry['Custom6']['Value'] == u'Sales Rep Billable':
+                        bill = False
                 try:
                     project = entry['Custom4']['Code']
                 except:
@@ -78,7 +84,8 @@ class ExpenseReports:
                         'paytype': 5,
                         'description': entry['VendorDescription'],
                         'date': entry['TransactionDate'],
-                        'project': project
+                        'project': project,
+                        'billable': bill
                     })
                 except:
                     pass

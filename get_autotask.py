@@ -171,7 +171,7 @@ class AutoTask:
                 entry.Destination = x['to']
                 entry.Origin = x['from']
             entry.PaymentType = x['paytype']
-            entry.BillableToAccount = True
+            entry.BillableToAccount = x['billable']
             entry.Description = str(x['description'])
             if pid:
                 entry.ProjectID = pid
