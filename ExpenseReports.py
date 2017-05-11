@@ -103,7 +103,14 @@ class ExpenseReports:
 
 
     def is_billable(self, entry):
-        return entry['ExpenseTypeName'] in ['Parking', 'Car Rental', 'Airfare', 'Transportation', 'Hotel']
+        return entry['ExpenseTypeName'] not in [
+            'Personal Car Mileage', 
+            'Business Meals', 
+            'Entertainment - Client',
+            'Entertainment - Staff',
+            'Professional Subscriptions/Dues',
+            'Tuition/Training Reimbursement',
+            ]
 
 
     def save_pickle(self):
