@@ -28,57 +28,45 @@ class ExpenseReports:
             self.report_pickle = pickle.load(id_pickle)
 
 
-    def C_entries(self, report_ID):
+    def billable_entries(self, report):
+        '''
+        Takes a list of entries as retrieved from Concur as input 
+        and outputs a list of the entries in that list are billable
+        '''
+        entries = report['ExpenseEntriesList']['ExpenseEntry']
+        # If it's only one entry, the API doesn't return a list, just the entry
+        if type(entries) is not list:
+            entries = [entries] # Puts single entries into a list
         report_entries = []
-        try:
+        nonbillable_types = [
+            'Personal Car Mileage', 
+            'Business Meals', 
+            'Entertainment - Client',
+            'Entertainment - Staff',
+            'Professional Subscriptions/Dues',
+            'Tuition/Training Reimbursement',
+            ]
+        for entry in entries:
             try:
-                entries = self.concur.report(report_ID)['ReportDetails']['ExpenseEntriesList']['ExpenseEntry']
-                print('Got Entries') # Chad added for debugging
-            except:
-                print('Error Getting Entries') # Chad added for debugging
-                entries = None
-            if entries is not None and list(entries) == entries:
-                print('Is List')
-                #Chad changing logic on for loop to error handle before appending
-                for entry in entries:
-                    try:
-                        if self.is_billable(entry):
-                            print('Adding entry')
-                            report_entries.append(entry)
-                    except:
-                        print('Error checking is billable')
-
-                # Old logic
-                # report_entries.append([entry for entry in entries if self.is_billable(entry)])
-                return report_entries #Chad removed [0] to return whole array   
-            # If it's only one entry, the API doesn't return a list, just the entry
-            else:
-                try:
-                    if self.is_billable(entries):
-                        report_entries.append([entries])
-                except IndexError:
-                    print('Index error') # Chad added for debugging
-                    return report_entries #Chad removed [0] to return whole array
-        except TypeError:
-            print('Type error') # Chad added for debugging
-            return None 
-        try:
-            return report_entries 
-        except:
-            print('Error returning report entries') # Chad added for debugging
-            return report_entries
+                if entry['ExpenseTypeName'] not in nonbillable_types:
+                        report_entries.append(entry)
+            except Exception as e:
+                print (report)
+                print('Error checking is billable - {}'.format(e))
+        return report_entries
 
 
-    def AT_post(self, expensereport, entries):
+    def AT_post(self, expensereport):
         d = datetime.strptime(expensereport['ReportDate'].split('.')[0], '%Y-%m-%dT%X')
         while d.weekday() != 5:
             d += timedelta(1)
         entry_output = {
             'name': expensereport['ReportName'],
             'weekending': str(d),
-            'userid': expensereport['ExpenseUserLoginID'],
+            'userid': expensereport['UserLoginID'],
             'entries': [],
             }
+        entries = self.billable_entries(expensereport)
         if entries is not None:
             for entry in entries:
                 bill = None
@@ -117,23 +105,12 @@ class ExpenseReports:
         if entry_output['entries'] == []:
             # Skip reports with no billable project-associated entries
             return None
-        self.report_pickle.append(expensereport['ReportId'])
+        self.report_pickle.append(expensereport['ReportID'])
         self.logfile.content.append({
             'ReportName': entry_output['name'],
             'User': entry_output['userid'],
             })
         return self.autotask.post(entry_output)
-
-
-    def is_billable(self, entry):
-        return entry['ExpenseTypeName'] not in [
-            'Personal Car Mileage', 
-            'Business Meals', 
-            'Entertainment - Client',
-            'Entertainment - Staff',
-            'Professional Subscriptions/Dues',
-            'Tuition/Training Reimbursement',
-            ]
 
 
     def save_pickle(self):
@@ -155,7 +132,7 @@ class ExpenseReports:
             if testing:
                 c_reports = [i for i in c_reports if i['ExpenseUserLoginID'] == "devops@corus360.com"]
             for num, report in enumerate(c_reports):
-                self.AT_post(report, self.C_entries(report['ReportId']))
+                self.AT_post(self.concur.report(report['ReportId'])['ReportDetails'])
                 if testing:
                     print("Report #{} - {}".format(num, report['ReportName']))
         self.logfile.write_csv()
@@ -168,6 +145,6 @@ if __name__ == '__main__':
     exp = ExpenseReports()
     exp.main(
         testing=sys.argv[-1] == '-test', # searches only reports from test accounts (devops/WebAdmin) and prints to console
-        email_log=True, # Emails log of posted expenses
+        email_log=True, # Emails log of posted expenses 
         day_range=1, # How many days back to check for reports
         )
