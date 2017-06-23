@@ -41,17 +41,35 @@ CONCUR = {
         }, 
 
         'alias': {
-            'Mileage':('Personal Car Mileage'),
-            'Entertainment': ('Entertainment - Client', 'Entertainment - Staff',),
-            'Phone' : ('Mobile/Cellular Phone'),
-            'Transportation': ('Public Transport', 'Taxi', 'Personal Car Mileage', 'Fuel'),#YES
-            'Hotel': ('Hotel'),#Billable
-            'Meals': ('Breakfast', 'Business Meals', 'Dinner', 'Lunch', 'Snacks/Beverages',),
-            'Per Diem': ('Per Diem'),
-            'Other': ('Other', 'Gifts - Clients', 'Gifts - Staff', 'Miscellaneous', 'Postage'),
-            'Airfare': ('Airfare', 'Airline Fees'),#Billable
-            'Car Rental': ('Car Rental'),#Billable
-            'Parking': ('Parking'),#Billable
+            'Personal Car Mileage': 'Mileage',
+            'Entertainment - Client': 'Entertainment',
+            'Entertainment - Staff': 'Entertainment',
+            'Mobile/Cellular Phone' : 'Phone',
+            'Public Transport': 'Transportation',
+            'Taxi': 'Transportation',
+            'Personal Car Mileage': 'Transportation',
+            'Fuel': 'Transportation',
+            'Hotel': 'Hotel',
+            'Breakfast': 'Meals',
+            'Business Meals': 'Meals',
+            'Dinner': 'Meals',
+            'Lunch': 'Meals',
+            'Business Meals (Attendees)': 'Meals',
+            'Snacks/Beverages': 'Meals',
+            'Per Diem': 'Per Diem',
+            'Other': 'Other',
+            'Agency Booking Fees': 'Other',
+            'Internet/Online Fees': 'Other',
+            'Office Equipment/Hardware': 'Other',
+            'Gifts - Clients': 'Other',
+            'Gifts - Staff': 'Other',
+            'Miscellaneous': 'Other',
+            'Seminar/Course Fees': 'Other',
+            'Postage': 'Other',
+            'Airfare': 'Airfare',
+            'Airline Fees': 'Airfare',
+            'Car Rental': 'Car Rental',
+            'Parking': 'Parking',
         },
 
         'WorkType': {

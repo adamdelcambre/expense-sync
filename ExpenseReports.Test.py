@@ -8,7 +8,6 @@ from es_logging import LogCSV
 import ssl
 import os
 import sys
-import ctypes # An included library with Python install.
 
 
 
@@ -21,7 +20,6 @@ class ExpenseReports:
     def __init__(self):
         self.autotask = AutoTask()
         self.concur = Concur()
-        self.values = CONCUR['VALUES']
         self.logfile = LogCSV()
         self.idpkl = os.path.join(os.path.dirname(__file__), 'ids.pkl')
         with open(self.idpkl, 'rb') as id_pickle:
@@ -47,12 +45,9 @@ class ExpenseReports:
             'Tuition/Training Reimbursement',
             ]
         for entry in entries:
-            try:
-                if entry['ExpenseTypeName'] not in nonbillable_types:
-                        report_entries.append(entry)
-            except Exception as e:
-                print (report)
-                print('Error checking is billable - {}'.format(e))
+            if entry['ExpenseTypeName'] not in nonbillable_types:
+                if entry['Custom4'] is not None:
+                    report_entries.append(entry)
         return report_entries
 
 
@@ -60,51 +55,32 @@ class ExpenseReports:
         d = datetime.strptime(expensereport['ReportDate'].split('.')[0], '%Y-%m-%dT%X')
         while d.weekday() != 5:
             d += timedelta(1)
+
         entry_output = {
             'name': expensereport['ReportName'],
             'weekending': str(d),
             'userid': expensereport['UserLoginID'],
             'entries': [],
             }
+
         entries = self.billable_entries(expensereport)
-        if entries is not None:
+        if len(entries) > 0:
             for entry in entries:
-                bill = None
                 try:
-                    if entry['Custom6']:
-                        if entry['Custom6']['Value'] == u'Customer Billable':
-                            bill = True
-                        elif entry['Custom6']['Value'] == u'Sales Rep Billable':
-                            bill = False
-                except:
-                    bill = False
-                try:
-                    project = entry['Custom4']['Code']
-                except:
-                    pass
-                for y in self.values['alias'].keys():
-                    try:
-                        if entry['ExpenseTypeName'] in self.values['alias'][y]:
-                            expense = self.values['ExpenseCategory'][y]
-                    except:
-                        pass
-                try:
-                    entry_output['entries'].append({
-                        'amount': entry['TransactionAmount'],
-                        'expense': expense,
-                        'paytype': 5,
-                        'description': entry['VendorDescription'],
-                        'date': entry['TransactionDate'],
-                        'project': project,
-                        'billable': bill
-                    })
-                except:
-                    pass
+                    category = CONCUR['VALUES']['alias'][entry['ExpenseTypeName']]
+                except KeyError:
+                    category = CONCUR['VALUES']['alias']['Other']
+                entry_output['entries'].append({
+                    'amount': entry['TransactionAmount'],
+                    'expense': CONCUR['VALUES']['ExpenseCategory'][category],
+                    'description': entry['VendorDescription'],
+                    'date': entry['TransactionDate'],
+                    'project': entry['Custom4'].get('Code', None),
+                    'billable': entry['Custom6'].get('Value', False) == u'Customer Billable',
+                })
         else:
-            entry_output['entries'] == []
-        if entry_output['entries'] == []:
-            # Skip reports with no billable project-associated entries
             return None
+
         self.report_pickle.append(expensereport['ReportID'])
         self.logfile.content.append({
             'ReportName': entry_output['name'],
@@ -129,12 +105,8 @@ class ExpenseReports:
             c_reports = [
                 r for r in self.concur.getReports({'modifiedafterdate': back_date}) if
                 r['ReportId'] not in self.report_pickle]
-            if testing:
-                c_reports = [i for i in c_reports if i['ExpenseUserLoginID'] == "devops@corus360.com"]
-            for num, report in enumerate(c_reports):
+            for report in c_reports:
                 self.AT_post(self.concur.report(report['ReportId'])['ReportDetails'])
-                if testing:
-                    print("Report #{} - {}".format(num, report['ReportName']))
         self.logfile.write_csv()
         self.save_pickle()
         if email_log:
@@ -144,7 +116,6 @@ class ExpenseReports:
 if __name__ == '__main__':
     exp = ExpenseReports()
     exp.main(
-        testing=sys.argv[-1] == '-test', # searches only reports from test accounts (devops/WebAdmin) and prints to console
         email_log=True, # Emails log of posted expenses 
         day_range=1, # How many days back to check for reports
         )
