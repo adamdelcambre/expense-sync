@@ -106,7 +106,10 @@ class ExpenseReports:
                 r for r in self.concur.getReports({'modifiedafterdate': back_date}) if
                 r['ReportId'] not in self.report_pickle]
             for report in c_reports:
-                self.AT_post(self.concur.report(report['ReportId'])['ReportDetails'])
+                try:
+                    self.AT_post(self.concur.report(report['ReportId'])['ReportDetails'])
+                except:
+                    print('Error finding details for report: {}'.format(report['ReportId']))
         self.logfile.write_csv()
         self.save_pickle()
         if email_log:
