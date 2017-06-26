@@ -3,3 +3,5 @@ auth.pkl
 test.py
 *.csv
 ids.pkl
+expense-sync.sublime-project
+expense-sync.sublime-workspace
